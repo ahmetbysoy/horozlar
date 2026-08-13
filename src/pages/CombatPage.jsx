@@ -10,6 +10,7 @@ import { GeneticsEngine } from '../engine/GeneticsEngine.js';
 import { effectiveStats } from '../engine/EquipmentCatalog.js';
 import { audio } from '../managers/AudioManager.js';
 import { vibrate } from '../utils/vibrate.js';
+import { TelegramService } from '../config/telegram.js';
 
 const LEAGUES = [
   { id: 'SOKAK', name: '🏚️ Sokak', reward: [100, 200], tier: 0 },
@@ -161,7 +162,14 @@ export default function CombatPage() {
           {pvpCode && (
             <div className="mt">
               <div className="log mb" style={{ wordBreak: 'break-all', fontSize: 12, userSelect: 'all' }}>{pvpCode}</div>
-              <button className="btn btn-blue btn-block" onClick={() => { navigator.clipboard?.writeText(pvpCode); toast('📋 Kod kopyalandı'); }}>📋 Kopyala</button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="btn btn-blue" style={{ flex: 1 }} onClick={() => { navigator.clipboard?.writeText(pvpCode); toast('📋 Kod kopyalandı'); }}>📋 Kopyala</button>
+                {TelegramService.isAvailable() ? (
+                  <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => { TelegramService.shareUrl(pvpCode, '🐓 Horoz İmparatorluğu — benimle dövüş! Kodum: '); toast('📤 Paylaşım açıldı'); }}>📤 TG'de Paylaş</button>
+                ) : (
+                  <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => { TelegramService.shareUrl(pvpCode, '🐓 Dövüşme kodu: '); }}>📤 Paylaş</button>
+                )}
+              </div>
             </div>
           )}
         </div>

@@ -6,10 +6,12 @@ import StatBar from '../components/common/StatBar.jsx';
 import { GeneticsEngine } from '../engine/GeneticsEngine.js';
 import { audio } from '../managers/AudioManager.js';
 import { vibrate } from '../utils/vibrate.js';
+import { TelegramService } from '../config/telegram.js';
 
 export default function HomePage({ onNavigate }) {
   const state = useGame();
   const toast = useToast();
+  const tgUser = TelegramService.getUser();
   const today = new Date().toISOString().slice(0, 10);
   const claimed = state.lastDailyClaim === today;
   const levelPct = state.xp / (100 * state.level);
@@ -24,8 +26,15 @@ export default function HomePage({ onNavigate }) {
   return (
     <div>
       <div className="glass mb" style={{ textAlign: 'center' }}>
-        <h1>🐓 Hoş geldin, Çiftçi!</h1>
+        <h1>🐓 Hoş geldin{tgUser ? `, ${tgUser.firstName}` : ', Çiftçi'}!</h1>
         <div className="muted">Horozlarını yetiştir, dövüştür ve imparatorluğunu kur!</div>
+        {tgUser && (
+          <div className="mt" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            {tgUser.photoUrl && <img src={tgUser.photoUrl} alt="avatar" style={{ width: 34, height: 34, borderRadius: '50%' }} />}
+            <span className="muted" style={{ fontSize: 12 }}>@{tgUser.username || 'Telegram kullanıcısı'}{tgUser.isPremium && ' 👑'}</span>
+          </div>
+        )}
+        {!tgUser && <div className="muted" style={{ fontSize: 11, marginTop: 6 }}>ℹ️ Telegram içinden açarsan kullanıcı bilgin ve özel tema otomatik yüklenir.</div>}
       </div>
 
       <div className="card">

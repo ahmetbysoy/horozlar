@@ -26,6 +26,7 @@ Bu MVP, dokümandaki 26 oyun sisteminden **çekirdek oynanabilir döngüyü** uy
 | **PVP** (§6.21) | ✅ | Asenkron PVP: horozunu `HI-` Base64 koda çevir & paylaş, rakibin kodunu girerek dövüş (2x ödül, ⚡15) |
 | **Ekipman** (§6.15) | ✅ | 3 slot (Gaga/Tüy/Tırnak), satın alma + takma/çıkarma, dövüşte stat bonusu uygulanır |
 | **Ekipman Mağazası** (§6.14) | ✅ | 9 ekipman (Common 200🪙, Rare 500🪙, Epic 1💎), rarity rozeti, filtre |
+| **Telegram Entegrasyonu** (§5) | ✅ | WebApp SDK wrapper: tema renkleri otomatik uygulanır, kullanıcı bilgisi (ad/avatar/premium), haptic feedback, PVP kodunu TG'de paylaşma. Tarayıcıda da çalışır (fallback) |
 
 ## ✨ Cila & Oynanış İyileştirmeleri
 - 🔊 **Web Audio API ses sistemi** (§8.1) — vuruş, kritik, kaçınma, yetenek, kazanma/kaybetme, coin, buton tıklaması. Ses sentezlenir, harici dosya gerekmez.
@@ -59,6 +60,19 @@ Production build: `npm run build`
 - 🏰 Klan (§6.19), 👹 Boss savaşları (§6.17), 🎰 Çark (§6.23)
 - 🎮 Sezon, Prestij/Miras (§6.20, §6.22)
 - 🔊 Web Audio API ses efekleri, Telegram haptic & tema entegrasyonu
+
+## 📱 Telegram'da Açmak (Bot kurulumu)
+Oyun bir Telegram Mini App'tir ve Telegram içinde en iyi deneyimi verir (tema, kullanıcı, haptic, paylaşım):
+
+```
+1. Vercel/netlify gibi bir yerde projeyi canlıya al (ör: https://horozlar.vercel.app)
+2. @BotFather → /newbot → bot adı (ör: "Horoz Imparatorlugu Bot")
+3. /setmenubutton → botunu seç → URL olarak canlı adresini gir (https://horozlar.vercel.app)
+4. /setdescription → "Genetik horoz yetiştirme ve dövüştürme oyunu 🐓"
+5. Botuna mesaj at → menü butonuna tıkla → Mini App açılır
+```
+
+Tarayıcıda çalışırken de her şey çalışır; Telegram tema/kullanıcı özellikleri devre dışı kalır (fallback).
 
 ## 📝 Not
 Doküman Firebase kullanımını öngörüyor. Bu MVP'in **hemen oynanabilir** olması için backend yerine localStorage kullanıldı;

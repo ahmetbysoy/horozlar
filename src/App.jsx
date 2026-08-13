@@ -9,22 +9,38 @@ import CombatPage from './pages/CombatPage.jsx';
 import MarketPage from './pages/MarketPage.jsx';
 import QuestsPage from './pages/QuestsPage.jsx';
 import { audio } from './managers/AudioManager.js';
+import { TelegramService } from './config/telegram.js';
 
 export default function App() {
   const state = useGame();
   const [tab, setTab] = useState('home');
+  const [tgTheme, setTgTheme] = useState(null);
 
-  // İlk etkileşimde sesi başlat (autoplay policy) + buton tıklama sesi
+  // Telegram başlat + tema uygula
   useEffect(() => {
-    const init = () => {
+    TelegramService.init();
+    const theme = TelegramService.getTheme();
+    setTgTheme(theme);
+    // Telegram renklerini CSS değişkenlerine uygula (mobil görünüm)
+    const root = document.documentElement;
+    root.style.setProperty('--bg-primary', theme.bgColor);
+    root.style.setProperty('--bg-secondary', theme.secondaryBgColor || theme.bgColor);
+    root.style.setProperty('--bg-card', theme.secondaryBgColor || theme.bgColor);
+    root.style.setProperty('--text-primary', theme.textColor);
+    root.style.setProperty('--text-secondary', theme.hintColor);
+    try {
+      if (TelegramService.isAvailable()) document.body.style.background = theme.bgColor;
+    } catch (e) { /* ignore */ }
+
+    // İlk etkileşimde sesi başlat (autoplay policy) + buton tıklama sesi
+    const initAudio = () => {
       audio.init();
-      // Buton tıklamalarında ses çal
       document.addEventListener('click', (e) => {
-        if (e.target.closest('.btn')) audio.click();
+        if (e.target.closest('.btn')) { audio.click(); TelegramService.haptic.selection(); }
       });
     };
-    window.addEventListener('pointerdown', init, { once: true });
-    return () => window.removeEventListener('pointerdown', init);
+    window.addEventListener('pointerdown', initAudio, { once: true });
+    return () => window.removeEventListener('pointerdown', initAudio);
   }, []);
 
   const render = () => {
