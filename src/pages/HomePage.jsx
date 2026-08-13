@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useGame } from '../hooks/useGame.js';
-import { claimDaily, refillEnergy, prestigeReset, buyRelic, RELICS } from '../store/gameStore.js';
+import { claimDaily, refillEnergy, prestigeReset, buyRelic, RELICS, spinWheel, canSpinFree } from '../store/gameStore.js';
 import { useToast } from '../components/common/Toast.jsx';
 import StatBar from '../components/common/StatBar.jsx';
 import Modal from '../components/common/Modal.jsx';
+import SpinWheel from '../components/daily/SpinWheel.jsx';
 import { GeneticsEngine } from '../engine/GeneticsEngine.js';
-import { seasonInfo, SEASON_QUESTS, formatDuration } from '../engine/SeasonEngine.js';
+import { seasonInfo, SEASON_QUESTS } from '../engine/SeasonEngine.js';
 import { audio } from '../managers/AudioManager.js';
 import { vibrate } from '../utils/vibrate.js';
 import { TelegramService } from '../config/telegram.js';
@@ -27,7 +28,32 @@ export default function HomePage({ onNavigate }) {
   const [showPrestige, setShowPrestige] = useState(false);
   const [showSeason, setShowSeason] = useState(false);
   const [showRelics, setShowRelics] = useState(false);
+  const [showWheel, setShowWheel] = useState(false);
+  const [wheelResult, setWheelResult] = useState(null);
+  const [wheelFree, setWheelFree] = useState(canSpinFree());
   const season = seasonInfo();
+
+  // Çark — parent'ın spin fonksiyonu
+  const doSpin = (useDiamond = false) => {
+    const res = spinWheel(useDiamond);
+    if (!res.ok) {
+      if (res.freeUsed) toast(res.msg || 'Bugün zaten çevirdin');
+      else toast(res.msg || '⚠️ Çevrilemiyor');
+      return { ok: false };
+    }
+    setWheelFree(canSpinFree());
+    return res;
+  };
+
+  const handleWheelResult = (res) => {
+    if (res.rooster) {
+      setWheelResult(`🐓 Yeni horoz: ${res.rooster.name} (${res.rooster.rarity})!`);
+    } else if (res.seg.type === 'coins') {
+      setWheelResult(`🪙 +${res.seg.value} coin!`);
+    } else if (res.seg.type === 'diamonds') {
+      setWheelResult(`💎 +${res.seg.value} elmas!`);
+    }
+  };
 
   const doPrestige = () => {
     const res = prestigeReset();
@@ -57,6 +83,7 @@ export default function HomePage({ onNavigate }) {
         <StatBar label="" value={state.xp} max={100 * state.level} color="var(--accent-purple)" />
         <div className="mt" style={{ display: 'flex', gap: 8 }}>
           <button className="btn btn-green btn-sm" onClick={claim} disabled={claimed}>{claimed ? '✅ Alındı' : '🎁 Günlük Ödül'}</button>
+          <button className="btn btn-gold btn-sm" style={{ flex: 1 }} onClick={() => { setWheelResult(null); setShowWheel(true); }}>🎰 Çark</button>
           <button className="btn btn-blue btn-sm" onClick={() => { refillEnergy(); toast('⚡ Enerji dolduruldu (geliştirme modu)'); }}>⚡ Enerji Doldur</button>
         </div>
       </div>
@@ -143,6 +170,25 @@ export default function HomePage({ onNavigate }) {
               </div>
             );
           })}
+        </Modal>
+      )}
+
+      {/* Günlük Çark modal */}
+      {showWheel && (
+        <Modal title="🎰 Günlük Çark" onClose={() => setShowWheel(false)}>
+          <p className="muted center" style={{ fontSize: 13 }}>Günde <b>1 ücretsiz</b> çevirme hakkın var. Ekstra: 1 💎</p>
+          <SpinWheel
+            doSpin={(useDiamond) => doSpin(useDiamond)}
+            onResult={handleWheelResult}
+          />
+          {wheelResult && (
+            <div className="card mt center" style={{ border: '1px solid #f59e0b55', fontWeight: 700, color: 'var(--accent-yellow)' }}>
+              {wheelResult}
+            </div>
+          )}
+          {!wheelFree && (
+            <button className="btn btn-blue btn-block mt" onClick={() => doSpin(true)}>💎 1 Elmas ile Tekrar Çevir</button>
+          )}
         </Modal>
       )}
 

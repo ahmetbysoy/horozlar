@@ -300,6 +300,71 @@ export function completeOnboarding() {
   commit();
 }
 
+// ---------- Günlük Çark (§6.23) ----------
+
+// Çark segmentleri ve ağırlıkları (dokümandaki oranlarla)
+export const WHEEL_SEGMENTS = [
+  { label: '50 🪙',  type: 'coins', value: 50,   weight: 30 },
+  { label: '100 🪙', type: 'coins', value: 100,  weight: 25 },
+  { label: '250 🪙', type: 'coins', value: 250,  weight: 20 },
+  { label: '500 🪙', type: 'coins', value: 500,  weight: 12 },
+  { label: '1000 🪙',type: 'coins', value: 1000, weight: 8 },
+  { label: '1 💎',   type: 'diamonds', value: 1, weight: 4 },
+  { label: 'RARE 🐓',type: 'rooster', value: 0,  weight: 1 },
+];
+
+export const WHEEL_COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#a855f7', '#06b6d4'];
+
+// Ağırlıklı rastgele sonuç seç
+export function spinWheelResult() {
+  const total = WHEEL_SEGMENTS.reduce((s, w) => s + w.weight, 0);
+  let roll = Math.random() * total;
+  for (const seg of WHEEL_SEGMENTS) {
+    if (roll < seg.weight) return seg;
+    roll -= seg.weight;
+  }
+  return WHEEL_SEGMENTS[0];
+}
+
+// Çarkı çevir — günde 1 ücretsiz, ekstra 1 💎
+export function spinWheel(useDiamond = false) {
+  const today = new Date().toISOString().slice(0, 10);
+  const already = state.lastSpinDate === today;
+  if (already && !useDiamond) return { ok: false, freeUsed: true, msg: 'Bugün zaten çevirdin' };
+  if (already && useDiamond) {
+    if (state.diamonds < 1) return { ok: false, msg: '1 💎 gerekli' };
+    state.diamonds -= 1;
+  } else {
+    state.lastSpinDate = today;
+  }
+
+  const seg = spinWheelResult();
+  if (seg.type === 'coins') state.coins += seg.value;
+  else if (seg.type === 'diamonds') state.diamonds += seg.value;
+  else if (seg.type === 'rooster') {
+    // RARE veya üstü bir horoz ver
+    let r;
+    do { r = GeneticsEngine.createRooster(); } while (r.rarity === 'COMMON');
+    // Yadigar bonusu
+    const rb = relicBonuses();
+    r.stats.power += rb.power; r.stats.speed += rb.speed; r.stats.stamina += rb.stamina;
+    r.stats.maxHealth = r.stats.stamina * 10 + rb.hp;
+    r.hiddenStats.critChance = Math.min(0.25, r.hiddenStats.critChance + rb.crit);
+    state.roosters.push(r);
+    state.roosterSeed++;
+    commit();
+    return { ok: true, seg, rooster: r };
+  }
+
+  commit();
+  return { ok: true, seg };
+}
+
+export function canSpinFree() {
+  const today = new Date().toISOString().slice(0, 10);
+  return state.lastSpinDate !== today;
+}
+
 // ---------- Equipment ----------
 
 export function buyEquipment(item) {
