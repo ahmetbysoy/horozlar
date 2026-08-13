@@ -21,7 +21,7 @@ const LEAGUES = [
   { id: 'KARA', name: '💀 Kara Arena', reward: [800, 1500], tier: 4 },
 ];
 
-export default function CombatPage() {
+export default function CombatPage({ onNavigate }) {
   const state = useGame();
   const toast = useToast();
   const [mode, setMode] = useState('arena'); // arena | pvp
@@ -210,6 +210,19 @@ export default function CombatPage() {
 
   // ---------------- HOROZ SEÇ ----------------
   if (step === 'select') {
+    if (state.roosters.length === 0) {
+      return (
+        <div>
+          {modeBar}
+          <div className="glass center" style={{ marginTop: 40, padding: 40 }}>
+            <div style={{ fontSize: 56 }}>🐣</div>
+            <h1>Horozun yok!</h1>
+            <p className="muted">Dövüşebilmek için önce bir horoz üretmen gerekiyor.</p>
+            <button className="btn btn-gold btn-block" onClick={() => onNavigate?.('roosters')}>🐓 Horoz Üret</button>
+          </div>
+        </div>
+      );
+    }
     return (
       <div>
         {modeBar}

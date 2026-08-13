@@ -28,6 +28,8 @@ Bu MVP, dokümandaki 26 oyun sisteminden **çekirdek oynanabilir döngüyü** uy
 | **Ekipman Mağazası** (§6.14) | ✅ | 9 ekipman (Common 200🪙, Rare 500🪙, Epic 1💎), rarity rozeti, filtre |
 | **Telegram Entegrasyonu** (§5) | ✅ | WebApp SDK wrapper: tema renkleri otomatik uygulanır, kullanıcı bilgisi (ad/avatar/premium), haptic feedback, PVP kodunu TG'de paylaşma. Tarayıcıda da çalışır (fallback) |
 | **Firebase RTDB Bulut Kaydı** | ✅ | Veri Firebase Realtime Database'de `/horoz/v1/{oyuncuId}` altında saklanır. Telegram'da hesaba, tarayıcıda cihaza bağlı. localStorage offline yedek. `/balvakti` verisine dokunmaz |
+| **Profil & Ayarlar** | ✅ | Profil sayfası (istatistikler, sezon XP, hızlı erişim), ses/titreşim ayarları, kayıt sıfırlama |
+| **Onboarding** | ✅ | İlk açılışta 4 adımlı hoş geldin rehberi |
 
 ## ✨ Cila & Oynanış İyileştirmeleri
 - 🔊 **Web Audio API ses sistemi** (§8.1) — vuruş, kritik, kaçınma, yetenek, kazanma/kaybetme, coin, buton tıklaması. Ses sentezlenir, harici dosya gerekmez.

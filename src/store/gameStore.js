@@ -32,6 +32,8 @@ const DEFAULT_STATE = {
   // Sezon (§6.22)
   seasonXp: 0,
   seasonClaimed: [],
+  // Onboarding / ayarlar
+  onboarded: false,
   savedAt: 0,
 };
 
@@ -291,6 +293,11 @@ export function claimDaily() {
   state.coins += 200;
   state.energy = state.energyMax;
   commit(); return true;
+}
+
+export function completeOnboarding() {
+  state.onboarded = true;
+  commit();
 }
 
 // ---------- Equipment ----------

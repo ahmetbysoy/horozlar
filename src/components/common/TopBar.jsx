@@ -3,15 +3,20 @@ import { audio } from '../../managers/AudioManager.js';
 import { TelegramService } from '../../config/telegram.js';
 import { getPlayerIdForUI } from '../../store/gameStore.js';
 
-export default function TopBar({ state }) {
+export default function TopBar({ state, onNavigate }) {
   const [sound, setSound] = useState(true);
   const tgUser = TelegramService.getUser();
   const pid = getPlayerIdForUI();
   const isTG = pid.startsWith('tg_');
   return (
     <div className="topbar">
+      <button className="nav-item" style={{ padding: 0, border: 'none', background: 'none' }} onClick={() => onNavigate?.('profile')} title="Profil">
+        {tgUser?.photoUrl
+          ? <img src={tgUser.photoUrl} alt="" style={{ width: 28, height: 28, borderRadius: '50%' }} />
+          : <span style={{ fontSize: 26 }}>🐓</span>}
+      </button>
       <div className="brand">
-        🐓 Horoz<span>İmp</span>
+        Horoz<span>İmp</span>
         {tgUser && <span className="badge" style={{ background: '#3b82f622', color: '#3b82f6', marginLeft: 6, fontSize: 10 }}>TG</span>}
       </div>
       <div className="resources">

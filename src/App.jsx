@@ -9,9 +9,11 @@ import CombatPage from './pages/CombatPage.jsx';
 import MarketPage from './pages/MarketPage.jsx';
 import QuestsPage from './pages/QuestsPage.jsx';
 import ClanPage from './pages/ClanPage.jsx';
+import ProfilePage from './pages/ProfilePage.jsx';
 import { audio } from './managers/AudioManager.js';
 import { TelegramService } from './config/telegram.js';
 import { initFromCloud } from './store/gameStore.js';
+import Onboarding from './components/common/Onboarding.jsx';
 
 export default function App() {
   const state = useGame();
@@ -19,6 +21,14 @@ export default function App() {
   const [tgTheme, setTgTheme] = useState(null);
   const [cloudReady, setCloudReady] = useState(false);
   const [cloudError, setCloudError] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // İlk açılışta onboarding göster (henüz tamamlanmadıysa)
+  useEffect(() => {
+    if (state && !state.onboarded && !localStorage.getItem('horoz-onboarded')) {
+      setShowOnboarding(true);
+    }
+  }, []);
 
   // Buluttan kayıtlı veriyi yükle
   useEffect(() => {
@@ -60,20 +70,22 @@ export default function App() {
     switch (tab) {
       case 'home': return <HomePage onNavigate={setTab} />;
       case 'roosters': return <RoostersPage />;
-      case 'combat': return <CombatPage />;
+      case 'combat': return <CombatPage onNavigate={setTab} />;
       case 'market': return <MarketPage />;
       case 'quests': return <QuestsPage />;
       case 'clan': return <ClanPage />;
+      case 'profile': return <ProfilePage onNavigate={setTab} />;
       default: return <HomePage onNavigate={setTab} />;
     }
   };
 
   return (
     <div className="app">
-      <TopBar state={state} />
+      <TopBar state={state} onNavigate={setTab} />
       <div className="content" key={tab}>{render()}</div>
       <BottomNav active={tab} onChange={setTab} />
       <ToastHost />
+      {showOnboarding && <Onboarding onDone={() => { setShowOnboarding(false); localStorage.setItem('horoz-onboarded', '1'); }} />}
     </div>
   );
 }
