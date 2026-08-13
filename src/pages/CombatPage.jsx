@@ -3,7 +3,8 @@ import { useGame } from '../hooks/useGame.js';
 import RoosterCanvas from '../components/rooster/RoosterCanvas.jsx';
 import FightScene from '../components/combat/FightScene.jsx';
 import { createAI, TIER_TOTAL } from '../engine/AIGenerator.js';
-import { spendEnergy, recordFight, addCoins, addDiamonds, addXp, updateRooster } from '../store/gameStore.js';
+import { spendEnergy, recordFight, addCoins, addDiamonds, addXp, updateRooster, getKancalar, KANCALAR, buyKanca } from '../store/gameStore.js';
+import Modal from '../components/common/Modal.jsx';
 import { calculateBetOdds, BET_LIMITS, calculateFightReward, encodePVPCode, decodePVPCode } from '../engine/EconomyEngine.js';
 import { useToast } from '../components/common/Toast.jsx';
 import { GeneticsEngine } from '../engine/GeneticsEngine.js';
@@ -46,6 +47,10 @@ export default function CombatPage({ onNavigate }) {
   const [pvpEnemy, setPvpEnemy] = useState(null);
   const [pvpInput, setPvpInput] = useState('');
 
+  // Kanca
+  const [kanca, setKanca] = useState(null);
+  const [kancaPnl, setKancaPnl] = useState(false);
+
   const hasEquipment = state.equipment && state.equipment.some(i => i.equippedTo === selectedRooster?.id);
 
   const equippedBonus = (rooster) => {
@@ -68,7 +73,8 @@ export default function CombatPage({ onNavigate }) {
 
   const buildFighter = (rooster) => {
     const eff = effectiveStats(rooster, state.equipment);
-    return { ...rooster, stats: eff };
+    const f = { ...rooster, stats: eff, kanca: kanca || null };
+    return f;
   };
 
   const spendCoinsLocal = () => { addCoins(-betAmount); };
@@ -128,14 +134,14 @@ export default function CombatPage({ onNavigate }) {
     setStep('result');
   };
 
-  const reset = () => { setStep('select'); setSelectedRooster(null); setFighter(null); setEnemy(null); clearBet(); };
+  const reset = () => { setStep('select'); setSelectedRooster(null); setFighter(null); setEnemy(null); clearBet(); setKanca(null); };
 
   const goPVP = () => { setMode('pvp'); setStep('pvp'); };
 
   // ---------------- MODE SELECTOR ----------------
   const modeBar = (
     <div className="seg mb">
-      <button className={mode === 'arena' && step !== 'pvp' ? 'active' : ''} onClick={() => { setMode('arena'); setStep('select'); }}>🏟️ Arena</button>
+      <button className={mode === 'arena' && step !== 'pvp' ? 'active' : ''} onClick={() => { setMode('arena'); setStep('select'); }}>🏟️ Meydan</button>
       <button className={mode === 'pvp' ? 'active' : ''} onClick={() => { setMode('pvp'); setStep('pvp'); }}>🤺 PVP</button>
     </div>
   );
@@ -221,7 +227,7 @@ export default function CombatPage({ onNavigate }) {
           <div className="glass center" style={{ marginTop: 40, padding: 40 }}>
             <div style={{ fontSize: 56 }}>🐣</div>
             <h1>Horozun yok!</h1>
-            <p className="muted">Dövüşebilmek için önce bir horoz üretmen gerekiyor.</p>
+            <p className="muted">Meydana çıkabilmek için önce bir horoz şart koçum.</p>
             <button className="btn btn-gold btn-block" onClick={() => onNavigate?.('roosters')}>🐓 Horoz Üret</button>
           </div>
         </div>
@@ -230,8 +236,8 @@ export default function CombatPage({ onNavigate }) {
     return (
       <div>
         {modeBar}
-        <h1>⚔️ Dövüş</h1>
-        <p className="muted mb">Dövüşecek horozunu seç</p>
+        <h1>⚔️ Meydan</h1>
+        <p className="muted mb">Meydana çıkaracağın horozu seç</p>
         <div className="grid grid-roosters">
           {state.roosters.map(r => {
             const equipped = state.equipment.some(i => i.equippedTo === r.id);
@@ -291,7 +297,48 @@ export default function CombatPage({ onNavigate }) {
           <div className="muted" style={{ fontSize: 11, marginTop: 8 }}>Kazanırsan: {betAmount} × x{betOdds} = <b>{Math.floor(betAmount * betOdds)} 🪙</b></div>
         </div>
 
-        <button className="btn btn-primary btn-block mt" onClick={() => startFight()}>⚔️ Dövüşe Başla (⚡10)</button>
+        {/* Kanca seçimi */}
+        <div className="glass mt">
+          <h2 style={{ fontSize: 15 }}>🦯 Kanca Tak (opsiyonel)</h2>
+          <p className="muted" style={{ fontSize: 11 }}>{kanca ? `Takılı: ${kanca.name}` : 'Kanca seçilmedi — meydana çıplak çıkıyorsun.'}</p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            {KANCALAR.map(k => {
+              const owned = getKancalar().includes(k.id);
+              return (
+                <div key={k.id} className={`card ${kanca?.id === k.id ? 'sel' : ''}`} style={{ padding: 8, cursor: 'pointer', marginBottom: 0, border: kanca?.id === k.id ? '2px solid var(--accent-yellow)' : undefined }}
+                  onClick={() => setKanca(kanca?.id === k.id ? null : k)}>
+                  <div style={{ fontSize: 14, fontWeight: 700 }}>{k.name}</div>
+                  <div className="muted" style={{ fontSize: 11 }}>+%{k.dmgPct * 100} hasar{k.crit > 0 ? ` · +%${k.crit * 100} kritik` : ''}{k.risk > 0 ? ` · ⚠️ %${k.risk * 100} disk` : ''}</div>
+                  <div className="muted" style={{ fontSize: 11 }}>{owned ? '✅ Sende' : `🟡 ${k.cost}`}</div>
+                </div>
+              );
+            })}
+          </div>
+          <button className="btn btn-sm btn-secondary mt" onClick={() => setKancaPnl(true)}>🛒 Kanca Satın Al</button>
+        </div>
+
+        {kancaPnl && (
+          <Modal title="🦯 Karaborsa Kancaları" onClose={() => setKancaPnl(false)}>
+            {KANCALAR.map(k => {
+              const owned = getKancalar().includes(k.id);
+              return (
+                <div key={k.id} className="card" style={{ padding: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <div>
+                    <div style={{ fontWeight: 700 }}>{k.name}</div>
+                    <div className="muted" style={{ fontSize: 11 }}>+%{k.dmgPct * 100} hasar{k.crit > 0 ? ` · +%${k.crit * 100} kritik` : ''}{k.risk > 0 ? ` · ⚠️ %${k.risk * 100} disk` : ''}</div>
+                  </div>
+                  {owned ? (
+                    <button className="btn btn-sm btn-secondary" onClick={() => { setKanca(k); setKancaPnl(false); toast(`🦯 ${k.name} takıldı`); }}>Tak</button>
+                  ) : (
+                    <button className="btn btn-sm btn-gold" onClick={() => { const r = buyKanca(k.id); if (r.ok) { audio.coin(); toast(`🦯 ${k.name} alındı`); } else toast(r.msg); }}>🟡 {k.cost}</button>
+                  )}
+                </div>
+              );
+            })}
+          </Modal>
+        )}
+
+        <button className="btn btn-primary btn-block mt" onClick={() => startFight()}>⚔️ Meydana Çık (⚡10)</button>
 
         <div className="glass mt" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: 14 }}>Dövüş modu</span>

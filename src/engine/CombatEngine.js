@@ -64,7 +64,17 @@ export class CombatEngine {
   }
 
   attack(attacker, defender, rhythmMult = 1.0, skillMult = 1.0) {
-    const result = calculateDamage(attacker, defender, this.round, rhythmMult, skillMult * this.getBuffMult(attacker));
+    // Kanca (gaff) hasar bonusu
+    let gaffMult = 1.0;
+    if (attacker.kanca) {
+      gaffMult = 1 + (attacker.kanca.dmgPct || 0);
+      // Kritik bonus
+      if (attacker.kanca.crit && Math.random() < attacker.kanca.crit) {
+        // 1.8x ekstra
+        gaffMult *= 1.8;
+      }
+    }
+    const result = calculateDamage(attacker, defender, this.round, rhythmMult, skillMult * this.getBuffMult(attacker) * gaffMult);
     if (!result.isDodged) {
       defender.currentHealth = Math.max(0, defender.currentHealth - result.damage);
       attacker.rageMeter = Math.min(100, attacker.rageMeter + 5);

@@ -10,6 +10,7 @@ import { seasonInfo, SEASON_QUESTS } from '../engine/SeasonEngine.js';
 import { audio } from '../managers/AudioManager.js';
 import { vibrate } from '../utils/vibrate.js';
 import { TelegramService } from '../config/telegram.js';
+import { sokakLaf, unvan } from '../utils/sokak.js';
 
 export default function HomePage({ onNavigate }) {
   const state = useGame();
@@ -64,8 +65,8 @@ export default function HomePage({ onNavigate }) {
   return (
     <div>
       <div className="glass mb" style={{ textAlign: 'center' }}>
-        <h1>🐓 Hoş geldin{tgUser ? `, ${tgUser.firstName}` : ', Çiftçi'}!</h1>
-        <div className="muted">Horozlarını yetiştir, dövüştür ve imparatorluğunu kur!</div>
+        <h1>🐓 Hoş geldin{tgUser ? `, ${tgUser.firstName}` : ', koçum'}!</h1>
+        <div className="muted">{sokakLaf()}</div>
         {tgUser && (
           <div className="mt" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             {tgUser.photoUrl && <img src={tgUser.photoUrl} alt="avatar" style={{ width: 34, height: 34, borderRadius: '50%' }} />}
@@ -193,7 +194,7 @@ export default function HomePage({ onNavigate }) {
       )}
 
       <div className="glass mt" style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-        <b>Nasıl oynanır?</b> Horozlarını üret, antrenman yap, arenada dövüş, pazar'dan güçlen. Dövüş kazandıkça coin ve XP kazanırsın.
+        <b>Ünvanın:</b> {unvan(state.level)} · Sokakların düzeni böyle: horozunu büyüt, meydanda dövüştür, karaborsadan güçlen. Kazanan konuşur, kanka.
       </div>
     </div>
   );

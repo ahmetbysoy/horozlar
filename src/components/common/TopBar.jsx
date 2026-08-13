@@ -20,7 +20,7 @@ export default function TopBar({ state, onNavigate }) {
         {tgUser && <span className="badge" style={{ background: '#3b82f622', color: '#3b82f6', marginLeft: 6, fontSize: 10 }}>TG</span>}
       </div>
       <div className="resources">
-        <span className="res coin">🪙 {fmt(state.coins)}</span>
+        <span className="res coin">🟡 {fmt(state.coins)}</span>
         <span className="res diamond">💎 {state.diamonds}</span>
         <span className="res energy">⚡ {state.energy}/{state.energyMax}</span>
         <span className="res" style={{ color: isTG ? '#22c55e' : 'var(--text-secondary)' }} title="Buluta kayıtlı">☁️</span>

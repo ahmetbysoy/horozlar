@@ -32,6 +32,10 @@ const DEFAULT_STATE = {
   // Sezon (§6.22)
   seasonXp: 0,
   seasonClaimed: [],
+  // Karaborsa takviyeleri (sahip olunanlar)
+  takviyeler: [], // { id, name, slot(GEÇICI/KALICI), stat, value, ... }
+  // Kanca (gaff) envanteri
+  kancalar: [],
   // Onboarding / ayarlar
   onboarded: false,
   savedAt: 0,
@@ -402,6 +406,104 @@ export function unequipEquipment(itemId, roosterId) {
 }
 
 export function getEquipment() { return state.equipment.map(i => ({ ...i })); }
+
+// ---------- Karaborsa Takviyeleri ----------
+
+// Sokak takviye kataloğu (hor1'in karaborsasından esinlenerek)
+export const TAKVIYELER = [
+  { id: 'adrenalin', name: '💉 Adrenalin İğnesi', desc: '+10 hız (1 maç)', slot: 'GECICI', stat: 'speed', value: 10, cost: 500, sokak: 'Bir çekti mi tozu, horoz uçar.' },
+  { id: 'cig_et', name: '🥩 Çiğ Et', desc: '+5 güç (kalıcı)', slot: 'KALICI', stat: 'power', value: 5, cost: 2000, sokak: 'Bununla beslenen horoz yumruk gibi olur.' },
+  { id: 'secere', name: '📜 Sahte Secere', desc: '+100 prestij (anında)', slot: 'ANINDA', stat: 'prestige', value: 100, cost: 1000, sokak: 'Mühürlü kâğıt, mahkemede kimse sormaz.' },
+  { id: 'zehir_biber', name: '🌶️ Biber Gazı', desc: '+%10 kaçınma (1 maç)', slot: 'GECICI', stat: 'dodge', value: 0.10, cost: 800, sokak: 'Gözüne çekince kör olur düşman.' },
+  { id: 'horoz_suyu', name: '🧃 Horoz Suyu', desc: '+20 can (1 maç)', slot: 'GECICI', stat: 'hp', value: 200, cost: 1200, sokak: 'Gizli karışım, tarifini kimse bilmez.' },
+];
+
+// Takviye al
+export function buyTakviye(id) {
+  const t = TAKVIYELER.find(x => x.id === id);
+  if (!t) return { ok: false };
+  if (state.coins < t.cost) return { ok: false, msg: 'Papelin yetmiyor koçum' };
+  state.coins -= t.cost;
+  state.takviyeler = state.takviyeler || [];
+  state.takviyeler.push({ id: t.id, name: t.name, slot: t.slot, stat: t.stat, value: t.value, used: false });
+  commit();
+  return { ok: true, item: t };
+}
+
+// Takviyeleri kullan (ANINDA olanlar anında uygulanır, KALICI kalıcı uygulanır)
+export function useTakviye(id) {
+  const t = state.takviyeler.find(x => x.id === id && !x.used);
+  const def = TAKVIYELER.find(x => x.id === id);
+  if (!t || !def) return { ok: false };
+  if (def.slot === 'ANINDA') {
+    state.prestigePoints += def.value;
+    t.used = true;
+    commit();
+    return { ok: true, msg: `+${def.value} prestij` };
+  }
+  if (def.slot === 'KALICI') {
+    // Kullanıcı bir horoz seçer; burada ilk horoza uygulanır (UI'da seçtirilebilir)
+    t.used = true;
+    commit();
+    return { ok: true, msg: 'Horoz seçmen gerekiyor' };
+  }
+  return { ok: false, msg: 'Geçici takviye dövüş öncesi kullanılır' };
+}
+
+// Kalıcı takviyeyi bir horoza uygula
+export function applyKaliciTakviye(takviyeId, roosterId) {
+  const t = state.takviyeler.find(x => x.id === takviyeId && !x.used);
+  const def = TAKVIYELER.find(x => x.id === takviyeId);
+  const r = state.roosters.find(x => x.id === roosterId);
+  if (!t || !def || !r) return { ok: false };
+  if (def.slot === 'KALICI') {
+    r.stats[def.stat] = Math.min(150, r.stats[def.stat] + def.value);
+    r.stats.maxHealth = r.stats.stamina * 10;
+    t.used = true;
+    commit();
+    return { ok: true };
+  }
+  return { ok: false };
+}
+
+export function getTakviyeler() { return (state.takviyeler || []).map(t => ({ ...t })); }
+
+// Dövüş öncesi geçici takviyeleri hesapla (activeTakviyeler array olarak dövüşe verilir)
+export function applyGeciciTakviye(takviyeId, fighter) {
+  const t = state.takviyeler.find(x => x.id === takviyeId && !x.used);
+  const def = TAKVIYELER.find(x => x.id === takviyeId);
+  if (!t || !def) return false;
+  if (def.slot === 'GECICI') {
+    fighter.stats[def.stat] += def.value;
+    if (def.stat === 'hp') fighter.stats.maxHealth += def.value;
+    t.used = true;
+    commit();
+    return true;
+  }
+  return false;
+}
+
+// ---------- Kanca (Gaff) Sistemi ----------
+
+export const KANCALAR = [
+  { id: 'kemik', name: '🪶 Kemik Kanca', dmgPct: 0.05, crit: 0, risk: 0, cost: 300 },
+  { id: 'celik', name: '🔪 Çelik Kanca', dmgPct: 0.12, crit: 0, risk: 0, cost: 800 },
+  { id: 'kartal', name: '🦅 Kartal Mahmuzu', dmgPct: 0.20, crit: 0.05, risk: 0, cost: 2000 },
+  { id: 'kanli', name: '💀 Kanlı Mahmuz', dmgPct: 0.30, crit: 0, risk: 0.10, cost: 5000 },
+];
+
+export function buyKanca(id) {
+  const k = KANCALAR.find(x => x.id === id);
+  if (!k) return { ok: false };
+  if (state.coins < k.cost) return { ok: false, msg: 'Papelin yetmiyor koçum' };
+  state.coins -= k.cost;
+  state.kancalar = state.kancalar || [];
+  if (!state.kancalar.includes(id)) state.kancalar.push(id);
+  commit();
+  return { ok: true, item: k };
+}
+
+export function getKancalar() { return (state.kancalar || []).slice(); }
 
 // Kimlik (debug/UI için)
 export function getPlayerIdForUI() { return getPlayerId(); }
