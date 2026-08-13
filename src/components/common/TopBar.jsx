@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { audio } from '../../managers/AudioManager.js';
 import { TelegramService } from '../../config/telegram.js';
+import { getPlayerIdForUI } from '../../store/gameStore.js';
 
 export default function TopBar({ state }) {
   const [sound, setSound] = useState(true);
   const tgUser = TelegramService.getUser();
+  const pid = getPlayerIdForUI();
+  const isTG = pid.startsWith('tg_');
   return (
     <div className="topbar">
       <div className="brand">
@@ -15,6 +18,7 @@ export default function TopBar({ state }) {
         <span className="res coin">🪙 {fmt(state.coins)}</span>
         <span className="res diamond">💎 {state.diamonds}</span>
         <span className="res energy">⚡ {state.energy}/{state.energyMax}</span>
+        <span className="res" style={{ color: isTG ? '#22c55e' : 'var(--text-secondary)' }} title="Buluta kayıtlı">☁️</span>
         <button
           className="nav-item"
           style={{ padding: 0, width: 26, height: 26, fontSize: 15 }}

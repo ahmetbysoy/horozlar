@@ -10,11 +10,23 @@ import MarketPage from './pages/MarketPage.jsx';
 import QuestsPage from './pages/QuestsPage.jsx';
 import { audio } from './managers/AudioManager.js';
 import { TelegramService } from './config/telegram.js';
+import { initFromCloud } from './store/gameStore.js';
 
 export default function App() {
   const state = useGame();
   const [tab, setTab] = useState('home');
   const [tgTheme, setTgTheme] = useState(null);
+  const [cloudReady, setCloudReady] = useState(false);
+  const [cloudError, setCloudError] = useState(false);
+
+  // Buluttan kayıtlı veriyi yükle
+  useEffect(() => {
+    initFromCloud().then(ok => {
+      setCloudReady(true);
+      setCloudError(!ok && !navigator.onLine === false);
+      setTimeout(() => setCloudError(false), 2500);
+    });
+  }, []);
 
   // Telegram başlat + tema uygula
   useEffect(() => {
