@@ -22,6 +22,16 @@ const DEFAULT_STATE = {
   roosters: [],
   equipment: [],
   roosterSeed: 1,
+  // Prestij & Miras (§6.20)
+  prestigePoints: 0,
+  mirasPoints: 0,
+  prestigeCount: 0,
+  yadigarlar: [],
+  // Klan (§6.19)
+  clanId: null,
+  // Sezon (§6.22)
+  seasonXp: 0,
+  seasonClaimed: [],
   savedAt: 0,
 };
 
@@ -118,8 +128,32 @@ export function startNewGame() {
   return getState();
 }
 
+// Yadigar (relic) pasif bonuslarını hesapla — yeni horozlara uygulanır (§6.20)
+export function relicBonuses() {
+  const bonus = { power: 0, speed: 0, stamina: 0, crit: 0, dmg: 0, hp: 0 };
+  (state.yadigarlar || []).forEach(id => {
+    const r = RELICS.find(x => x.id === id);
+    if (r) {
+      bonus.power += r.bonus.power || 0;
+      bonus.speed += r.bonus.speed || 0;
+      bonus.stamina += r.bonus.stamina || 0;
+      bonus.crit += r.bonus.crit || 0;
+      bonus.dmg += r.bonus.dmg || 0;
+      bonus.hp += r.bonus.hp || 0;
+    }
+  });
+  return bonus;
+}
+
 export function generateRooster(name = null) {
   const rooster = GeneticsEngine.createRooster(name || `Horoz #${state.roosterSeed}`);
+  // Yadigar bonuslarını uygula
+  const rb = relicBonuses();
+  rooster.stats.power += rb.power;
+  rooster.stats.speed += rb.speed;
+  rooster.stats.stamina += rb.stamina;
+  rooster.stats.maxHealth = rooster.stats.stamina * 10 + rb.hp;
+  rooster.hiddenStats.critChance = Math.min(0.25, rooster.hiddenStats.critChance + rb.crit);
   state.roosters.push(rooster);
   state.roosterSeed++;
   commit();
@@ -164,10 +198,17 @@ export function removeRooster(id) {
   state.roosters = state.roosters.filter(r => r.id !== id); commit();
 }
 
-export function recordFight(roosterId, won) {
+export function recordFight(roosterId, won, leagueTier = 0) {
   const idx = state.roosters.findIndex(r => r.id === roosterId);
   state.fights++;
-  if (won) state.wins++;
+  if (won) {
+    state.wins++;
+    // Prestij puanı: kazanınca lig seviyesine göre (§6.12)
+    const tierMult = [10, 25, 50, 100, 200][leagueTier] || 10;
+    state.prestigePoints += tierMult;
+    // Sezon XP
+    state.seasonXp += tierMult;
+  }
   if (idx >= 0) {
     const r = state.roosters[idx];
     r.battleStats.fights++;
@@ -175,6 +216,73 @@ export function recordFight(roosterId, won) {
   }
   commit();
 }
+
+// ---------- Prestij & Miras (§6.20) ----------
+
+// Prestij sıfırla: tüm horozları/coini sıfırla, Miras Puanı kazan, yadigarlar & elmas korunur
+export function prestigeReset() {
+  if (state.prestigePoints < 5000) return { ok: false, message: 'En az 5000 prestij gerekli' };
+  const mpGain = Math.floor(state.prestigePoints / 100);
+  const keptDiamonds = state.diamonds;
+  const keptRelics = state.yadigarlar;
+  state = {
+    ...DEFAULT_STATE,
+    lastRegenAt: Date.now(),
+    roosters: [GeneticsEngine.createRooster('Kıro')],
+    equipment: [],
+    diamonds: keptDiamonds,
+    mirasPoints: (state.mirasPoints || 0) + mpGain,
+    prestigeCount: (state.prestigeCount || 0) + 1,
+    yadigarlar: keptRelics,
+    clanId: state.clanId,
+  };
+  commit();
+  return { ok: true, mpGain, prestigeCount: state.prestigeCount };
+}
+
+export function buyRelic(relicId) {
+  const relic = RELICS.find(r => r.id === relicId);
+  if (!relic) return false;
+  if ((state.mirasPoints || 0) < relic.cost) return false;
+  if (state.yadigarlar.includes(relicId)) return false;
+  state.mirasPoints -= relic.cost;
+  state.yadigarlar.push(relicId);
+  commit();
+  return true;
+}
+
+export function getPrestige() {
+  return {
+    prestigePoints: state.prestigePoints,
+    mirasPoints: state.mirasPoints,
+    prestigeCount: state.prestigeCount,
+    yadigarlar: [...(state.yadigarlar || [])],
+  };
+}
+
+// ---------- Klan (§6.19) ----------
+export function setClanId(clanId) { state.clanId = clanId; commit(); }
+
+// ---------- Sezon (§6.22) ----------
+export function claimSeasonReward(index) {
+  if (state.seasonClaimed.includes(index)) return false;
+  state.seasonClaimed.push(index);
+  // Basit ödül: her sezon görevine ödül ekleyen mekanizma SeasonEngine'de
+  commit();
+  return true;
+}
+
+export function getSeason() {
+  return { seasonXp: state.seasonXp, seasonClaimed: [...state.seasonClaimed] };
+}
+
+// ---------- Relic catalog (§6.20) ----------
+export const RELICS = [
+  { id: 'altin_tuy', name: 'Altın Tüy', desc: '+5 tüm stat başlangıç', cost: 10, bonus: { power: 5, speed: 5, stamina: 5 } },
+  { id: 'ejder_goz', name: 'Ejder Göz', desc: '+%10 kritik başlangıç', cost: 20, bonus: { crit: 0.10 } },
+  { id: 'antik_gaga', name: 'Antik Gaga', desc: '+%15 hasar başlangıç', cost: 30, bonus: { dmg: 0.15 } },
+  { id: 'tanri_kalkani', name: 'Tanrı Kalkanı', desc: '+500 başlangıç HP', cost: 50, bonus: { hp: 500 } },
+];
 
 export function claimDaily() {
   const today = new Date().toISOString().slice(0, 10);

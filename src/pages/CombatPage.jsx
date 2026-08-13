@@ -11,6 +11,7 @@ import { effectiveStats } from '../engine/EquipmentCatalog.js';
 import { audio } from '../managers/AudioManager.js';
 import { vibrate } from '../utils/vibrate.js';
 import { TelegramService } from '../config/telegram.js';
+import { addClanXp } from '../engine/ClanEngine.js';
 
 const LEAGUES = [
   { id: 'SOKAK', name: '🏚️ Sokak', reward: [100, 200], tier: 0 },
@@ -106,7 +107,8 @@ export default function CombatPage() {
     });
     if (res.win) { addCoins(coinReward); addXp(25 * rewardMult); if (diamonds) addDiamonds(diamonds); }
     else { addCoins(Math.floor(coinReward * 0.25)); addXp(5); }
-    recordFight(selectedRooster.id, res.win);
+    recordFight(selectedRooster.id, res.win, league.tier);
+    if (res.win) addClanXp([10, 25, 50, 100, 200][league.tier] || 10);
     if (res.win && betPayout) { audio.coin(); vibrate('success'); }
     if (res.win && rewardMult > 1) toast('🏆 PVP galibiyeti — 2x ödül!');
     // %30 gizli keşif

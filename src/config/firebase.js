@@ -30,14 +30,24 @@ export const fdb = {
     return `${NAMESPACE}/v1/${encodeURIComponent(playerId)}`;
   },
 
-  async get(key, playerId = getPlayerId()) {
-    const res = await fetch(`${DB_URL}/${this.path(playerId)}/${key}.json`, { cache: 'no-store' });
+  // Klanlar (ortak/global alan, oyuncudan ayrı): /horoz/clans/{clanId}
+  clanPath(clanId) {
+    return `${NAMESPACE}/clans/${encodeURIComponent(clanId)}`;
+  },
+
+  // Global liderlik / meta: /horoz/meta/{key}
+  metaPath(key) {
+    return `${NAMESPACE}/meta/${encodeURIComponent(key)}`;
+  },
+
+  async get(path) {
+    const res = await fetch(`${DB_URL}/${path}.json`, { cache: 'no-store' });
     if (!res.ok) throw new Error('RTDB okuma hatası: ' + res.status);
     return res.json();
   },
 
-  async set(key, value, playerId = getPlayerId()) {
-    const res = await fetch(`${DB_URL}/${this.path(playerId)}/${key}.json`, {
+  async set(path, value) {
+    const res = await fetch(`${DB_URL}/${path}.json`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(value ?? null),
@@ -46,8 +56,8 @@ export const fdb = {
     return res.json();
   },
 
-  async push(key, value, playerId = getPlayerId()) {
-    const res = await fetch(`${DB_URL}/${this.path(playerId)}/${key}.json`, {
+  async push(path, value) {
+    const res = await fetch(`${DB_URL}/${path}.json`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(value),
@@ -56,6 +66,11 @@ export const fdb = {
     const d = await res.json();
     return d.name;
   },
+
+  // Oyuncuya özel yardımcılar
+  async getPlayer(key, playerId = getPlayerId()) { return this.get(`${this.path(playerId)}/${key}`); },
+  async setPlayer(key, value, playerId = getPlayerId()) { return this.set(`${this.path(playerId)}/${key}`, value); },
+  async pushPlayer(key, value, playerId = getPlayerId()) { return this.push(`${this.path(playerId)}/${key}`, value); },
 };
 
 // Basit kalıcı kimlik (device fallback) kullanımı dışında kimlik gösterim yardımcıları

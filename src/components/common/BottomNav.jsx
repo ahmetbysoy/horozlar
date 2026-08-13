@@ -2,6 +2,7 @@ const TABS = [
   { id: 'home', label: 'Ana', icon: '🏠' },
   { id: 'roosters', label: 'Horozlar', icon: '🐓' },
   { id: 'combat', label: 'Dövüş', icon: '⚔️' },
+  { id: 'clan', label: 'Klan', icon: '🏰' },
   { id: 'market', label: 'Pazar', icon: '🛒' },
   { id: 'quests', label: 'Görevler', icon: '📋' },
 ];

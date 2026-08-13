@@ -8,6 +8,7 @@ import RoostersPage from './pages/RoostersPage.jsx';
 import CombatPage from './pages/CombatPage.jsx';
 import MarketPage from './pages/MarketPage.jsx';
 import QuestsPage from './pages/QuestsPage.jsx';
+import ClanPage from './pages/ClanPage.jsx';
 import { audio } from './managers/AudioManager.js';
 import { TelegramService } from './config/telegram.js';
 import { initFromCloud } from './store/gameStore.js';
@@ -62,6 +63,7 @@ export default function App() {
       case 'combat': return <CombatPage />;
       case 'market': return <MarketPage />;
       case 'quests': return <QuestsPage />;
+      case 'clan': return <ClanPage />;
       default: return <HomePage onNavigate={setTab} />;
     }
   };
