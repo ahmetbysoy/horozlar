@@ -18,6 +18,7 @@ const DEFAULT_STATE = {
   fights: 0,
   lastDailyClaim: '',
   roosters: [],
+  equipment: [],
   roosterSeed: 1,
 };
 
@@ -25,7 +26,9 @@ function load() {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
-    return { ...DEFAULT_STATE, ...JSON.parse(raw) };
+    const data = { ...DEFAULT_STATE, ...JSON.parse(raw) };
+    if (!data.equipment) data.equipment = [];
+    return data;
   } catch {
     return null;
   }
@@ -94,6 +97,7 @@ export function startNewGame() {
     ...DEFAULT_STATE,
     lastRegenAt: Date.now(),
     roosters: [firstRooster],
+    equipment: [],
   };
   commit();
   return getState();
@@ -189,3 +193,66 @@ export function claimDaily() {
   commit();
   return true;
 }
+
+// ---------- Equipment ----------
+
+export function buyEquipment(item) {
+  if (item.cost.diamonds) {
+    if (state.diamonds < item.cost.diamonds) return false;
+    state.diamonds -= item.cost.diamonds;
+  }
+  if (item.cost.coins) {
+    if (state.coins < item.cost.coins) return false;
+    state.coins -= item.cost.coins;
+  }
+  state.equipment.push({
+    id: item.id,
+    name: item.name,
+    slot: item.slot,
+    rarity: item.rarity,
+    stat: item.stat,
+    value: item.value,
+    equippedTo: null,
+  });
+  commit();
+  return true;
+}
+
+export function equipEquipment(itemId, roosterId) {
+  const item = state.equipment.find(i => i.id === itemId);
+  if (!item) return false;
+  const rooster = state.roosters.find(r => r.id === roosterId);
+  if (!rooster) return false;
+
+  // Aynı item zaten başka horozdaysa önce ondan çıkar
+  const prevOwner = state.roosters.find(r => r.id !== roosterId && r.equipment && r.equipment[item.slot.toLowerCase()] === itemId);
+  if (prevOwner) prevOwner.equipment[item.slot.toLowerCase()] = null;
+
+  // Mevcut slot'taki ekipmanı çıkar
+  const slotKey = item.slot.toLowerCase();
+  const existingItemId = rooster.equipment && rooster.equipment[slotKey];
+  if (existingItemId) {
+    const existing = state.equipment.find(i => i.id === existingItemId);
+    if (existing) existing.equippedTo = null;
+  }
+
+  item.equippedTo = roosterId;
+  if (!rooster.equipment) rooster.equipment = { beak: null, feather: null, claw: null };
+  rooster.equipment[slotKey] = itemId;
+  commit();
+  return true;
+}
+
+export function unequipEquipment(itemId, roosterId) {
+  const item = state.equipment.find(i => i.id === itemId);
+  const rooster = state.roosters.find(r => r.id === roosterId);
+  if (item) item.equippedTo = null;
+  if (rooster && rooster.equipment) {
+    const slotKey = item ? item.slot.toLowerCase() : '';
+    if (rooster.equipment[slotKey] === itemId) rooster.equipment[slotKey] = null;
+  }
+  commit();
+  return true;
+}
+
+export function getEquipment() { return state.equipment.map(i => ({ ...i })); }

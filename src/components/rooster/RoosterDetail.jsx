@@ -2,8 +2,11 @@ import Modal from '../common/Modal.jsx';
 import RoosterCanvas from './RoosterCanvas.jsx';
 import StatBar from '../common/StatBar.jsx';
 import { RarityBadge, BreedBadge, ElementIcon, statColors } from '../common/Badges.jsx';
+import { EQUIPMENT_SLOT, getEquipmentById, rarityColor } from '../../engine/EquipmentCatalog.js';
 
-export default function RoosterDetail({ rooster, onClose, children }) {
+const SLOT_ORDER = ['BEAK', 'FEATHER', 'CLAW'];
+
+export default function RoosterDetail({ rooster, onClose, inventory, onEquip, onUnequip, children }) {
   if (!rooster) return null;
   const h = rooster.hiddenStats;
   const d = rooster.discovered;
@@ -55,6 +58,55 @@ export default function RoosterDetail({ rooster, onClose, children }) {
           <span>Mağlubiyet: <b>{rooster.battleStats.losses}</b></span>
           <span>Öldürme: <b>{rooster.battleStats.kills}</b></span>
         </div>
+      </div>
+
+      <div className="glass mt">
+        <h2 style={{ fontSize: 15 }}>🛡️ Ekipman</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 10 }}>
+          {SLOT_ORDER.map(slotKey => {
+            const slot = EQUIPMENT_SLOT[slotKey];
+            const itemId = rooster.equipment && rooster.equipment[slotKey.toLowerCase()];
+            const item = itemId ? getEquipmentById(itemId) : null;
+            return (
+              <div key={slotKey} style={{ textAlign: 'center', padding: 8, borderRadius: 10, background: 'rgba(0,0,0,0.3)' }}>
+                <div style={{ fontSize: 22 }}>{slot.icon}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{slot.label}</div>
+                {item ? (
+                  <>
+                    <div style={{ fontSize: 12, fontWeight: 700 }}>{item.name}</div>
+                    <div style={{ fontSize: 12, color: 'var(--accent-green)' }}>+{item.value}</div>
+                  </>
+                ) : (
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Boş</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        {inventory && inventory.length > 0 && (
+          <div style={{ maxHeight: 150, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {inventory.map(item => {
+              const equippedHere = item.equippedTo === rooster.id;
+              const equippedElse = item.equippedTo && item.equippedTo !== rooster.id;
+              const slot = EQUIPMENT_SLOT[item.slot];
+              return (
+                <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 8px', borderRadius: 8, background: 'rgba(0,0,0,0.2)' }}>
+                  <div style={{ fontSize: 13 }}>
+                    {slot.icon} {item.name} <span className="badge" style={{ background: `${rarityColor(item.rarity)}22`, color: rarityColor(item.rarity) }}>+{item.value}</span>
+                  </div>
+                  {equippedHere ? (
+                    <button className="btn btn-sm btn-secondary" onClick={() => onUnequip(item.id, rooster.id)}>Çıkar</button>
+                  ) : (
+                    <button className="btn btn-sm btn-purple" disabled={equippedElse} onClick={() => onEquip(item.id, rooster.id)}>
+                      {equippedElse ? 'Başka horozda' : 'Tak'}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {(!inventory || inventory.length === 0) && <div className="muted" style={{ fontSize: 12 }}>Envanterde ekipman yok. Pazar → Ekipman'dan satın al.</div>}
       </div>
 
       {children && <div className="mt" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{children}</div>}

@@ -6,6 +6,7 @@ import Modal from '../components/common/Modal.jsx';
 import { spendCoins, generateRooster } from '../store/gameStore.js';
 import { useToast } from '../components/common/Toast.jsx';
 import { GeneticsEngine, RARITY } from '../engine/GeneticsEngine.js';
+import EquipmentShop from '../components/market/EquipmentShop.jsx';
 import { audio } from '../managers/AudioManager.js';
 import { vibrate } from '../utils/vibrate.js';
 
@@ -25,6 +26,7 @@ export default function MarketPage() {
   const toast = useToast();
   const [listings, setListings] = useState(createListings);
   const [buying, setBuying] = useState(null);
+  const [tab, setTab] = useState('roosters');
 
   const refresh = () => { setListings(createListings()); toast('🔄 Pazar yenilendi'); };
 
@@ -43,8 +45,18 @@ export default function MarketPage() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1>🛒 Pazar</h1>
-        <button className="btn btn-sm btn-secondary" onClick={refresh}>🔄 Yenile</button>
+        {tab === 'roosters' && <button className="btn btn-sm btn-secondary" onClick={refresh}>🔄 Yenile</button>}
       </div>
+
+      <div className="seg mb">
+        <button className={tab === 'roosters' ? 'active' : ''} onClick={() => setTab('roosters')}>🐓 Horozlar</button>
+        <button className={tab === 'equipment' ? 'active' : ''} onClick={() => setTab('equipment')}>🛡️ Ekipman</button>
+      </div>
+
+      {tab === 'equipment' ? (
+        <EquipmentShop state={state} ownedIds={state.equipment.map(i => i.id)} />
+      ) : (
+        <>
       <p className="muted mb" style={{ fontSize: 13 }}>NPC çiftçilerden horoz satın al. 6 saatte bir pazar yenilenir.</p>
 
       <div className="grid grid-roosters">
@@ -60,6 +72,8 @@ export default function MarketPage() {
           </div>
         ))}
       </div>
+      </>
+      )}
 
       {buying && (
         <Modal title="Satın Al" onClose={() => setBuying(null)}>

@@ -24,6 +24,8 @@ Bu MVP, dokümandaki 26 oyun sisteminden **çekirdek oynanabilir döngüyü** uy
 | **Dövüş Sonrası Keşif** | ✅ | %30 şansla gizli stat keşfi |
 | **Bahis** (§6.13) | ✅ | Dövüş öncesi bahis: oran = güç oranı × %5 ev avantajı, min 50 / max 10000, aktif bahis göstergesi, kazan/kaybet çözümü |
 | **PVP** (§6.21) | ✅ | Asenkron PVP: horozunu `HI-` Base64 koda çevir & paylaş, rakibin kodunu girerek dövüş (2x ödül, ⚡15) |
+| **Ekipman** (§6.15) | ✅ | 3 slot (Gaga/Tüy/Tırnak), satın alma + takma/çıkarma, dövüşte stat bonusu uygulanır |
+| **Ekipman Mağazası** (§6.14) | ✅ | 9 ekipman (Common 200🪙, Rare 500🪙, Epic 1💎), rarity rozeti, filtre |
 
 ## ✨ Cila & Oynanış İyileştirmeleri
 - 🔊 **Web Audio API ses sistemi** (§8.1) — vuruş, kritik, kaçınma, yetenek, kazanma/kaybetme, coin, buton tıklaması. Ses sentezlenir, harici dosya gerekmez.

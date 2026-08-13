@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useGame } from '../hooks/useGame.js';
-import { generateRooster, spendCoins, spendEnergy, updateRooster, removeRooster } from '../store/gameStore.js';
+import { generateRooster, spendCoins, spendEnergy, updateRooster, removeRooster, equipEquipment, unequipEquipment } from '../store/gameStore.js';
 import RoosterCard from '../components/rooster/RoosterCard.jsx';
 import RoosterDetail from '../components/rooster/RoosterDetail.jsx';
 import { useToast } from '../components/common/Toast.jsx';
@@ -81,7 +81,13 @@ export default function RoostersPage() {
       )}
 
       {selected && (
-        <RoosterDetail rooster={selected} onClose={() => setSelected(null)}>
+        <RoosterDetail
+          rooster={selected}
+          onClose={() => setSelected(null)}
+          inventory={state.equipment}
+          onEquip={(itemId, roosterId) => { equipEquipment(itemId, roosterId); audio.click(); toast('🛡️ Ekipman takıldı'); }}
+          onUnequip={(itemId, roosterId) => { unequipEquipment(itemId, roosterId); audio.click(); toast('🛡️ Ekipman çıkarıldı'); }}
+        >
           <button className="btn btn-green btn-block" onClick={() => setShowTrain(true)}>🏋️ Antrenman Yap (🪙100 + ⚡10)</button>
           <button className="btn btn-purple btn-block" onClick={() => vet(selected.id)}>🔬 Veteriner (🪙500)</button>
           <button className="btn btn-secondary btn-block" onClick={() => { setSelected(null); doRemove(selected.id); }}>🗑️ Serbest Bırak</button>

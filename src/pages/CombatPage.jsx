@@ -7,6 +7,7 @@ import { spendEnergy, recordFight, addCoins, addDiamonds, addXp, updateRooster }
 import { calculateBetOdds, BET_LIMITS, calculateFightReward, encodePVPCode, decodePVPCode } from '../engine/EconomyEngine.js';
 import { useToast } from '../components/common/Toast.jsx';
 import { GeneticsEngine } from '../engine/GeneticsEngine.js';
+import { effectiveStats } from '../engine/EquipmentCatalog.js';
 import { audio } from '../managers/AudioManager.js';
 import { vibrate } from '../utils/vibrate.js';
 
@@ -24,6 +25,7 @@ export default function CombatPage() {
   const [mode, setMode] = useState('arena'); // arena | pvp
   const [step, setStep] = useState('select'); // select | arena | fight | result | pvp
   const [selectedRooster, setSelectedRooster] = useState(null);
+  const [fighter, setFighter] = useState(null);
   const [league, setLeague] = useState(LEAGUES[0]);
   const [enemy, setEnemy] = useState(null);
   const [auto, setAuto] = useState(true);
@@ -41,16 +43,29 @@ export default function CombatPage() {
   const [pvpEnemy, setPvpEnemy] = useState(null);
   const [pvpInput, setPvpInput] = useState('');
 
+  const hasEquipment = state.equipment && state.equipment.some(i => i.equippedTo === selectedRooster?.id);
+
+  const equippedBonus = (rooster) => {
+    const items = state.equipment.filter(i => i.equippedTo === rooster.id);
+    return items.reduce((s, i) => s + i.value, 0);
+  };
+
   const startFight = (isPVP = false) => {
     if (!selectedRooster) return toast('Önce bir horoz seç');
     const energyCost = isPVP ? 15 : 10;
     if (state.energy < energyCost) return toast(`⚠️ Yeterli enerji yok (${energyCost} ⚡)`);
     spendEnergy(energyCost);
     if (betActive) { spendCoinsLocal(); }
+    setFighter(buildFighter(selectedRooster));
     setEnemy(isPVP ? pvpEnemy : createAI(league.tier));
     setRewardMult(isPVP ? 2 : 1);
     setOutcome(null);
     setStep('fight');
+  };
+
+  const buildFighter = (rooster) => {
+    const eff = effectiveStats(rooster, state.equipment);
+    return { ...rooster, stats: eff };
   };
 
   const spendCoinsLocal = () => { addCoins(-betAmount); };
@@ -106,7 +121,7 @@ export default function CombatPage() {
     setStep('result');
   };
 
-  const reset = () => { setStep('select'); setSelectedRooster(null); setEnemy(null); clearBet(); };
+  const reset = () => { setStep('select'); setSelectedRooster(null); setFighter(null); setEnemy(null); clearBet(); };
 
   const goPVP = () => { setMode('pvp'); setStep('pvp'); };
 
@@ -191,15 +206,18 @@ export default function CombatPage() {
         <h1>⚔️ Dövüş</h1>
         <p className="muted mb">Dövüşecek horozunu seç</p>
         <div className="grid grid-roosters">
-          {state.roosters.map(r => (
-            <div key={r.id} className={`card rooster-card rarity-glow-${r.rarity}`}
-              style={selectedRooster?.id === r.id ? { border: '2px solid var(--accent-yellow)' } : {}}
-              onClick={() => setSelectedRooster(r)}>
-              <div className="center"><RoosterCanvas rooster={r} size={90} /></div>
-              <div className="center" style={{ fontWeight: 700 }}>{r.name}</div>
-              <div className="muted center" style={{ fontSize: 11 }}>Toplam {GeneticsEngine.totalStats(r)}</div>
-            </div>
-          ))}
+          {state.roosters.map(r => {
+            const equipped = state.equipment.some(i => i.equippedTo === r.id);
+            return (
+              <div key={r.id} className={`card rooster-card rarity-glow-${r.rarity}`}
+                style={selectedRooster?.id === r.id ? { border: '2px solid var(--accent-yellow)' } : {}}
+                onClick={() => setSelectedRooster(r)}>
+                <div className="center"><RoosterCanvas rooster={r} size={90} /></div>
+                <div className="center" style={{ fontWeight: 700 }}>{r.name}</div>
+                <div className="muted center" style={{ fontSize: 11 }}>Toplam {GeneticsEngine.totalStats(r)}{equipped && <span style={{ color: '#a855f7' }}> 🛡️+{equippedBonus(r)}</span>}</div>
+              </div>
+            );
+          })}
         </div>
         {selectedRooster && <button className="btn btn-primary btn-block mt" onClick={() => setStep('arena')}>Devam → Arena Seç</button>}
       </div>
@@ -257,11 +275,12 @@ export default function CombatPage() {
   }
 
   // ---------------- DÖVÜŞ ----------------
-  if (step === 'fight' && enemy) {
+  if (step === 'fight' && enemy && fighter) {
     return (
       <div>
         {betActive && <div className="glass mb" style={{ padding: 10, textAlign: 'center', color: 'var(--accent-yellow)', fontWeight: 800 }}>🎰 Bahis: {betAmount} 🪙 @ x{betOdds} → Kazanç: {Math.floor(betAmount * betOdds)} 🪙</div>}
-        <FightScene playerRooster={selectedRooster} enemyRooster={enemy} auto={auto} onFinish={onFinish} />
+        {hasEquipment && <div className="glass mb" style={{ padding: 8, textAlign: 'center', fontSize: 12, color: '#a855f7' }}>🛡️ Ekipman bonusu uygulandı</div>}
+        <FightScene playerRooster={fighter} enemyRooster={enemy} auto={auto} onFinish={onFinish} />
       </div>
     );
   }
