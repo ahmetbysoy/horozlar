@@ -10,6 +10,7 @@ import MarketPage from './pages/MarketPage.jsx';
 import QuestsPage from './pages/QuestsPage.jsx';
 import ClanPage from './pages/ClanPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
+import LeaderboardPage from './pages/LeaderboardPage.jsx';
 import { audio } from './managers/AudioManager.js';
 import { TelegramService } from './config/telegram.js';
 import { initFromCloud } from './store/gameStore.js';
@@ -75,6 +76,7 @@ export default function App() {
       case 'quests': return <QuestsPage />;
       case 'clan': return <ClanPage />;
       case 'profile': return <ProfilePage onNavigate={setTab} />;
+      case 'leaderboard': return <LeaderboardPage />;
       default: return <HomePage onNavigate={setTab} />;
     }
   };

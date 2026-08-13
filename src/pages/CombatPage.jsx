@@ -12,6 +12,7 @@ import { audio } from '../managers/AudioManager.js';
 import { vibrate } from '../utils/vibrate.js';
 import { TelegramService } from '../config/telegram.js';
 import { addClanXp } from '../engine/ClanEngine.js';
+import { updateLeaderboardEntry } from '../engine/LeaderboardEngine.js';
 
 const LEAGUES = [
   { id: 'SOKAK', name: '🏚️ Sokak', reward: [100, 200], tier: 0 },
@@ -109,6 +110,9 @@ export default function CombatPage({ onNavigate }) {
     else { addCoins(Math.floor(coinReward * 0.25)); addXp(5); }
     recordFight(selectedRooster.id, res.win, league.tier);
     if (res.win) addClanXp([10, 25, 50, 100, 200][league.tier] || 10);
+    // Lider tablosunu güncelle
+    const totalPower = state.roosters.reduce((s, r) => s + GeneticsEngine.totalStats(r), 0);
+    updateLeaderboardEntry({ prestigePoints: state.prestigePoints, wins: state.wins, totalPower, level: state.level, seasonXp: state.seasonXp, fights: state.fights, clanId: state.clanId });
     if (res.win && betPayout) { audio.coin(); vibrate('success'); }
     if (res.win && rewardMult > 1) toast('🏆 PVP galibiyeti — 2x ödül!');
     // %30 gizli keşif

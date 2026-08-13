@@ -76,6 +76,8 @@ export default function HomePage({ onNavigate }) {
         <button className="btn btn-blue" onClick={() => onNavigate('combat')}>⚔️ Arena</button>
         <button className="btn btn-secondary" onClick={() => onNavigate('clan')}>🏰 Klan</button>
         <button className="btn btn-secondary" onClick={() => setShowSeason(true)}>📅 Sezon {season.number}</button>
+        <button className="btn btn-gold" onClick={() => onNavigate('leaderboard')}>🏆 Liderlik</button>
+        <button className="btn btn-secondary" onClick={() => onNavigate('profile')}>👤 Profil</button>
       </div>
 
       {/* Prestij kartı */}
