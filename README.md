@@ -22,6 +22,8 @@ Bu MVP, dokümandaki 26 oyun sisteminden **çekirdek oynanabilir döngüyü** uy
 | **Günlük Ödül** (§6.23) | ✅ | Login streak ödülü |
 | **Veteriner** (§6.25) | ✅ | 🪙500 ile tüm gizli özellikleri açma |
 | **Dövüş Sonrası Keşif** | ✅ | %30 şansla gizli stat keşfi |
+| **Bahis** (§6.13) | ✅ | Dövüş öncesi bahis: oran = güç oranı × %5 ev avantajı, min 50 / max 10000, aktif bahis göstergesi, kazan/kaybet çözümü |
+| **PVP** (§6.21) | ✅ | Asenkron PVP: horozunu `HI-` Base64 koda çevir & paylaş, rakibin kodunu girerek dövüş (2x ödül, ⚡15) |
 
 ## ✨ Cila & Oynanış İyileştirmeleri
 - 🔊 **Web Audio API ses sistemi** (§8.1) — vuruş, kritik, kaçınma, yetenek, kazanma/kaybetme, coin, buton tıklaması. Ses sentezlenir, harici dosya gerekmez.
@@ -52,7 +54,6 @@ Production build: `npm run build`
 ## ⏭️ Sonraki Adımlar (spec'ten kalan)
 - 🔌 Firebase Auth + Firestore gerçek zamanlı senkronizasyon (`.env` ile)
 - 🧬 Füzyon / Üreme / Mutasyon paneli (§6.10, §6.11)
-- 🤺 PVP kod paylaşımı (§6.21), ⚖️ Bahis (§6.13)
 - 🏰 Klan (§6.19), 👹 Boss savaşları (§6.17), 🎰 Çark (§6.23)
 - 🎮 Sezon, Prestij/Miras (§6.20, §6.22)
 - 🔊 Web Audio API ses efekleri, Telegram haptic & tema entegrasyonu

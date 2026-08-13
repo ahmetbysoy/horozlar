@@ -8,7 +8,7 @@ const NAMES = [
 ];
 
 // Lig başına hedeflenen toplam stat gücü
-const TIER_TOTAL = [90, 120, 155, 190, 235];
+export const TIER_TOTAL = [90, 120, 155, 190, 235];
 
 export function randomName() {
   return NAMES[Math.floor(Math.random() * NAMES.length)];
