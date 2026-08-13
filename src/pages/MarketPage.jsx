@@ -6,6 +6,8 @@ import Modal from '../components/common/Modal.jsx';
 import { spendCoins, generateRooster } from '../store/gameStore.js';
 import { useToast } from '../components/common/Toast.jsx';
 import { GeneticsEngine, RARITY } from '../engine/GeneticsEngine.js';
+import { audio } from '../managers/AudioManager.js';
+import { vibrate } from '../utils/vibrate.js';
 
 const RARITY_MULT = { COMMON: 1, RARE: 2, EPIC: 4, LEGENDARY: 10 };
 
@@ -33,6 +35,7 @@ export default function MarketPage() {
     generateRooster(buying.rooster.name);
     setListings(l => l.filter(x => x.id !== buying.id));
     setBuying(null);
+    audio.coin(); vibrate('success');
     toast(`🛒 ${buying.rooster.name} satın alındı!`);
   };
 
@@ -46,7 +49,7 @@ export default function MarketPage() {
 
       <div className="grid grid-roosters">
         {listings.map(l => (
-          <div key={l.id} className="card rooster-card" onClick={() => setBuying(l)}>
+          <div key={l.id} className={`card rooster-card rarity-glow-${l.rooster.rarity}`} onClick={() => setBuying(l)}>
             <div className="center"><RoosterCanvas rooster={l.rooster} size={95} animated /></div>
             <div className="center" style={{ fontWeight: 700 }}>{l.rooster.name}</div>
             <div className="center" style={{ display: 'flex', justifyContent: 'center', gap: 4, margin: '4px 0' }}>

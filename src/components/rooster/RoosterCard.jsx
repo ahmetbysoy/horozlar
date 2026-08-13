@@ -5,7 +5,7 @@ import { GeneticsEngine } from '../../engine/GeneticsEngine.js';
 export default function RoosterCard({ rooster, onClick }) {
   const total = GeneticsEngine.totalStats(rooster);
   return (
-    <div className="card rooster-card" onClick={onClick}>
+    <div className={`card rooster-card rarity-glow-${rooster.rarity}`} onClick={onClick}>
       <div className="center" style={{ position: 'relative' }}>
         <RoosterCanvas rooster={rooster} size={110} animated={rooster.genetics?.isMutated} />
         {rooster.genetics?.isMutated && <div style={{ position: 'absolute', top: 4, right: 8, fontSize: 18 }}>🧬</div>}

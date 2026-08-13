@@ -4,6 +4,8 @@ import { claimDaily, refillEnergy } from '../store/gameStore.js';
 import { useToast } from '../components/common/Toast.jsx';
 import StatBar from '../components/common/StatBar.jsx';
 import { GeneticsEngine } from '../engine/GeneticsEngine.js';
+import { audio } from '../managers/AudioManager.js';
+import { vibrate } from '../utils/vibrate.js';
 
 export default function HomePage({ onNavigate }) {
   const state = useGame();
@@ -13,7 +15,7 @@ export default function HomePage({ onNavigate }) {
   const levelPct = state.xp / (100 * state.level);
 
   const claim = () => {
-    if (claimDaily()) toast('🪙 Günlük ödül alındı! +200 coin & ⚡ enerji doldu');
+    if (claimDaily()) { audio.win(); vibrate('success'); toast('🪙 Günlük ödül alındı! +200 coin & ⚡ enerji doldu'); }
     else toast('Bugün zaten aldınız');
   };
 

@@ -23,6 +23,16 @@ Bu MVP, dokümandaki 26 oyun sisteminden **çekirdek oynanabilir döngüyü** uy
 | **Veteriner** (§6.25) | ✅ | 🪙500 ile tüm gizli özellikleri açma |
 | **Dövüş Sonrası Keşif** | ✅ | %30 şansla gizli stat keşfi |
 
+## ✨ Cila & Oynanış İyileştirmeleri
+- 🔊 **Web Audio API ses sistemi** (§8.1) — vuruş, kritik, kaçınma, yetenek, kazanma/kaybetme, coin, buton tıklaması. Ses sentezlenir, harici dosya gerekmez.
+- 📳 **Haptic/titreşim** (§8.3) — Telegram HapticFeedback + Web Vibration API fallback (kritikte ağır, vuruşta hafif, kazanınca başarı).
+- 💥 **Dövüş sahnesi** — "VS" açılış splash'i, ekran sarsıntısı (kritikte), animasyonlu hasar float'ları (kritik altın, kaçınma gri).
+- 🏆 **Sonuç ekranı** — pop-in emoji, animasyonlu başlık, ışıldayan ödül kartı.
+- ✨ **Rarity glow animasyonları** — COMMON→LEGENDARY karta göre parlayan kenarlık.
+- 🔉 **TopBar ses aç/kapat** butonu.
+- ⚖️ **Dengeleme** — AI rakip gücü artık tier'a göre ölçekleniyor:
+  Sokak %98 · Mahalle %92 · Şehir %76 · Yeraltı %62 · Kara Arena %38 (oyuncu kazanma oranları, 500 sim).
+
 ## 🖼️ Canvas Horoz Çizimi
 Horozlar ırk + element + rarity renkleriyle HTML5 Canvas üzerinde çizilir. Mutant horozlar renk değiştirir ve animasyonlu olur.
 

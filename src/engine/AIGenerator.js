@@ -1,4 +1,4 @@
-// AI rakip üretimi — lig seviyesine uygun rastgele horoz
+// AI rakip üretimi — lig seviyesine göre hedeflenen toplam güç
 import { GeneticsEngine } from './GeneticsEngine.js';
 
 const NAMES = [
@@ -7,23 +7,36 @@ const NAMES = [
   'Süper Horoz', 'İmparator', 'Kral', 'Şampiyon', 'Haydut', 'Tornado',
 ];
 
+// Lig başına hedeflenen toplam stat gücü
+const TIER_TOTAL = [90, 120, 155, 190, 235];
+
 export function randomName() {
   return NAMES[Math.floor(Math.random() * NAMES.length)];
 }
 
 export function createAI(leagueTier) {
-  // leagueTier: 0=çaylak ... 4=efsane
-  let seed = GeneticsEngine.generateSeed();
-  // Gücü yukarı çekmek için seed karakterlerini F'ye yaklaştır
-  const power = 35 + leagueTier * 12;
-  let attempts = 0;
-  let rooster = GeneticsEngine.createRooster(randomName(), seed);
-  // istatistik hedefine ulaşana kadar yeniden üret
-  while (GeneticsEngine.totalStats(rooster) < power && attempts < 60) {
-    seed = GeneticsEngine.generateSeed();
-    rooster = GeneticsEngine.createRooster(randomName(), seed);
-    attempts++;
-  }
+  const tier = Math.max(0, Math.min(TIER_TOTAL.length - 1, leagueTier));
+  const targetTotal = TIER_TOTAL[tier];
+  const base = GeneticsEngine.createRooster(randomName(), GeneticsEngine.generateSeed());
+
+  // Seed'in temel stat oranlarını koru, ama toplamı hedefe ölçekle
+  const currentTotal = base.stats.power + base.stats.speed + base.stats.stamina;
+  const scale = targetTotal / currentTotal;
+  const power = Math.max(20, Math.round(base.stats.power * scale));
+  const speed = Math.max(20, Math.round(base.stats.speed * scale));
+  const stamina = Math.max(20, Math.round(base.stats.stamina * scale));
+
+  const rooster = {
+    ...base,
+    stats: {
+      ...base.stats,
+      power,
+      speed,
+      stamina,
+      maxHealth: stamina * 10,
+    },
+    hiddenStats: { ...base.hiddenStats },
+  };
   rooster.isPlayer = false;
   rooster.isAI = true;
   return rooster;

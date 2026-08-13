@@ -129,14 +129,16 @@ export default function CombatPage() {
   // Adım 4: sonuç
   if (step === 'result' && outcome) {
     return (
-      <div className="glass center" style={{ marginTop: 40 }}>
-        <div style={{ fontSize: 48 }}>{outcome.win ? '🏆' : '💀'}</div>
-        <h1>{outcome.win ? 'KAZANDIN!' : 'KAYBETTİN'}</h1>
+      <div className="center" style={{ marginTop: 30 }}>
+        <span className="result-emoji">{outcome.win ? '🏆' : '💀'}</span>
+        <div className={`result-title ${outcome.win ? '' : ''}`} style={{ color: outcome.win ? 'var(--accent-yellow)' : 'var(--accent-red)' }}>
+          {outcome.win ? 'KAZANDIN!' : 'KAYBETTİN'}
+        </div>
         <p className="muted">Rakip: {outcome.enemyName}</p>
-        <div className="mt" style={{ fontSize: 16 }}>
-          <div>🪙 +{outcome.coin}</div>
-          {outcome.diamonds > 0 && <div>💎 +{outcome.diamonds}</div>}
-          <div className="muted">+XP</div>
+        <div className="reward-card mt">
+          <div style={{ fontSize: 16 }}>🪙 +{outcome.coin} Coin</div>
+          {outcome.diamonds > 0 && <div style={{ fontSize: 16 }}>💎 +{outcome.diamonds} Elmas</div>}
+          <div style={{ fontSize: 14, opacity: .8 }}>+{outcome.win ? 25 : 5} XP</div>
         </div>
         <div className="mt" style={{ display: 'flex', gap: 8, flexDirection: 'column' }}>
           <button className="btn btn-primary btn-block" onClick={() => { reset(); }}>⚔️ Yeni Dövüş</button>

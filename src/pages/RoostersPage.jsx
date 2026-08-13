@@ -6,6 +6,8 @@ import RoosterDetail from '../components/rooster/RoosterDetail.jsx';
 import { useToast } from '../components/common/Toast.jsx';
 import Modal from '../components/common/Modal.jsx';
 import { GeneticsEngine } from '../engine/GeneticsEngine.js';
+import { audio } from '../managers/AudioManager.js';
+import { vibrate } from '../utils/vibrate.js';
 
 export default function RoostersPage() {
   const state = useGame();
@@ -19,6 +21,7 @@ export default function RoostersPage() {
     const r = generateRooster(name.trim() || null);
     setShowNew(false);
     setName('');
+    audio.win(); vibrate('success');
     toast(`🐓 ${r.name} doğdu! (${r.rarity})`);
   };
 
@@ -37,6 +40,7 @@ export default function RoostersPage() {
     const hidden = r.discovered;
     const undiscovered = ['critChanceRevealed', 'dodgeChanceRevealed', 'panicRevealed', 'lateGameRevealed', 'potentialRevealed'].filter(k => !hidden[k]);
     let msg = `🏋️ ${stat === 'power' ? 'Güç' : stat === 'speed' ? 'Hız' : 'Dayanıklılık'} +${newVal - r.stats[stat]} `;
+    audio.train(); vibrate('light');
     if (undiscovered.length && Math.random() < 0.2) {
       const key = undiscovered[Math.floor(Math.random() * undiscovered.length)];
       hidden[key] = true;
@@ -52,6 +56,7 @@ export default function RoostersPage() {
     updateRooster(roosterId, {
       discovered: { critChanceRevealed: true, dodgeChanceRevealed: true, panicRevealed: true, lateGameRevealed: true, potentialRevealed: true },
     });
+    audio.coin(); vibrate('light');
     toast('🔬 Veteriner raporu alındı — tüm gizli özellikler açıldı!');
   };
 

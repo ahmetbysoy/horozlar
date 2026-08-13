@@ -1,7 +1,8 @@
 import { useRef, useState, useEffect } from 'react';
 import RoosterCanvas from '../rooster/RoosterCanvas.jsx';
 import { CombatEngine } from '../../engine/CombatEngine.js';
-import { RarityBadge } from '../common/Badges.jsx';
+import { audio } from '../../managers/AudioManager.js';
+import { vibrate } from '../../utils/vibrate.js';
 
 export default function FightScene({ playerRooster, enemyRooster, auto, onFinish, reward }) {
   const engineRef = useRef(null);
@@ -15,8 +16,21 @@ export default function FightScene({ playerRooster, enemyRooster, auto, onFinish
   const [p1hp, setP1hp] = useState(playerRooster.stats.maxHealth);
   const [p2hp, setP2hp] = useState(enemyRooster.stats.maxHealth);
   const [rage, setRage] = useState(0);
+  const [shake, setShake] = useState(false);
+  const [showVS, setShowVS] = useState(true);
+  const arenaRef = useRef(null);
+
+  useEffect(() => { const t = setTimeout(() => setShowVS(false), 1150); return () => clearTimeout(t); }, []);
+
+  const triggerShake = () => {
+    setShake(true);
+    setTimeout(() => setShake(false), 500);
+  };
 
   useEffect(() => {
+    audio.init();
+    audio.roar();
+    vibrate('medium');
     const e = new CombatEngine(
       { ...playerRooster, isPlayer: true },
       { ...enemyRooster, isPlayer: false },
@@ -49,12 +63,22 @@ export default function FightScene({ playerRooster, enemyRooster, auto, onFinish
     const lines = [];
     roundLog.actions.forEach(a => {
       if (a.type === 'POISON_TICK') lines.push(`<p class="poison">☠️ ${a.target} zehir hasarı -${a.damage}</p>`);
-      else if (a.type === 'SKILL') lines.push(`<p class="skill">✨ ${a.message}</p>`);
+      else if (a.type === 'SKILL') {
+        lines.push(`<p class="skill">✨ ${a.message}</p>`);
+        audio.skill(); vibrate('light');
+      }
       else {
         const cls = a.isCrit ? 'crit' : a.isDodged ? 'dodge' : '';
-        if (a.isCrit) pushFloat({ at: Date.now(), text: `💥${a.damage}`, crit: true, attacker: a.attacker });
-        else if (a.isDodged) pushFloat({ at: Date.now(), text: 'MISS!', dodge: true, attacker: a.attacker });
-        else pushFloat({ at: Date.now(), text: `-${a.damage}`, attacker: a.attacker });
+        if (a.isCrit) {
+          pushFloat({ at: Date.now(), text: `💥${a.damage}`, crit: true, attacker: a.attacker });
+          audio.crit(); vibrate('heavy'); triggerShake();
+        } else if (a.isDodged) {
+          pushFloat({ at: Date.now(), text: 'MISS!', dodge: true, attacker: a.attacker });
+          audio.dodge(); vibrate('light');
+        } else {
+          pushFloat({ at: Date.now(), text: `-${a.damage}`, attacker: a.attacker });
+          audio.hit(); vibrate('light');
+        }
         lines.push(`<p class="${cls}">⚔️ ${a.attacker} → ${a.isDodged ? 'kaçındı!' : (a.isCrit ? `KRİTİK ${a.damage}` : `${a.damage}`)}</p>`);
       }
     });
@@ -64,7 +88,8 @@ export default function FightScene({ playerRooster, enemyRooster, auto, onFinish
     if (e.isFinished) {
       setFinished(true);
       setResult({ winner: e.winner.isPlayer, engine: e });
-      setTimeout(() => onFinish({ win: e.winner.isPlayer, engine: e, enemyRooster }), 800);
+      if (e.winner.isPlayer) { audio.win(); vibrate('success'); } else { audio.lose(); vibrate('error'); }
+      setTimeout(() => onFinish({ win: e.winner.isPlayer, engine: e, enemyRooster }), 900);
     }
   };
 
@@ -96,7 +121,8 @@ export default function FightScene({ playerRooster, enemyRooster, auto, onFinish
   return (
     <div>
       {/* Savaş alanı */}
-      <div className="fight-area mb">
+      <div className={`fight-area mb ${shake ? 'animate-shake' : ''}`} ref={arenaRef}>
+        {showVS && <div className="vs-splash">⚔️ VS ⚔️</div>}
         <div className="fighter p1" style={{ textAlign: 'center' }}>
           <RoosterCanvas rooster={playerRooster} size={92} animated />
           <div style={{ fontSize: 12, fontWeight: 700 }}>{playerRooster.name}</div>
